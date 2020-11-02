@@ -8,15 +8,13 @@ public class Server : MonoBehaviour
     //Connect configuration
     private const int MAX_USER = 15;
     private const int PORT = 26000;
-    //private const int WEB_PORT = 26001;
     private const int BYTE_SIZE = 1024;
 
 
     private byte reliableChannel; //channel for data transfer
     private int hostId;           
-    //private int webHostId;
 
-    private bool isStater = false;
+    private bool isStarted = false;
     private byte error;
 
     private Mongo dataBase;
@@ -32,7 +30,7 @@ public class Server : MonoBehaviour
     [System.Obsolete]
     void Update()
     {
-        if (!isStater)
+        if (!isStarted)
             UpdateMessagePump();
     }
     #endregion
@@ -51,11 +49,10 @@ public class Server : MonoBehaviour
         reliableChannel = connectionConfig.AddChannel(QosType.Reliable);
         HostTopology hostTopology = new HostTopology(connectionConfig, MAX_USER);
         hostId = NetworkTransport.AddHost(hostTopology, PORT, null);
-        //webHostId = NetworkTransport.AddWebsocketHost(hostTopology, WEB_PORT, null);
 
         Debug.Log("Opening connection on port " + PORT);
 
-        isStater = true;
+        isStarted = true;
     }
 
     //this method filtering any recived in channel and typing data for descript
@@ -170,8 +167,8 @@ public class Server : MonoBehaviour
         //Crush data into a byte[]
         byte[] buffer = new byte[BYTE_SIZE];
         BinaryFormatter formatter = new BinaryFormatter();
-        MemoryStream ms = new MemoryStream(buffer);
-        formatter.Serialize(ms, msg);
+        MemoryStream memoryStream = new MemoryStream(buffer);
+        formatter.Serialize(memoryStream, msg);
         //send byte data
         NetworkTransport.Send(hostId, connectionId, reliableChannel, buffer, BYTE_SIZE, out error);
     }
@@ -180,7 +177,7 @@ public class Server : MonoBehaviour
     [System.Obsolete]
     public void Shutdown()
     {
-        isStater = false;
+        isStarted = false;
         NetworkTransport.Shutdown();
     }
 }
